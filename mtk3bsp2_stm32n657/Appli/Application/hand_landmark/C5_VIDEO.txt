@@ -1,0 +1,89 @@
+================================================================================
+Phase C5 — M3 VIDEO_ONLY（カメラ→LCD、NN なし）
+作成: 2026/8/2 / 更新: センサ IMX335
+================================================================================
+
+【方針】
+  TENOMI_C5_VIDEO_ONLY=1 … app_run は Display + CAM PIPE1 + isp スレッドのみ
+  TENOMI_C5_REAL_CAM_LCD=1 … CAM/SCRL/LCD を landmarks 実ソースに切替
+  TENOMI_C3_CALL_APP_RUN=1 … hl_startup から app_run() を起動
+  USE_IMX335_SENSOR / SCR_LIB_USE_LTDC
+
+【追加（パス参照）】
+  app_cam.c, cmw_camera/utils, cmw_imx335 + imx335/imx335_reg, ISP 6本,
+  scrl_lcd, stm32_lcd（font20 は stm32_lcd が #include）,
+  discovery_bus / discovery_lcd
+  Appli: hl_security.c（RIF）, CSI/DCMIPP IRQ（stm32n6xx_it.c）
+
+【ビルド】
+  Appli/makefile.defs → Debug/.../tenomi_c5.mk + tenomi_hal_extra.mk
+  リンクは objects.list（cmw_imx335 / imx335 / imx335_reg を含むこと）
+  Clean Build 推奨（センサ切替後は必須）
+
+【黒画面調査】
+  症状1: PLL2/4 未起動 → hl_clock で修正
+  症状2: AXISRAM3 未起動 → FB を PSRAM へ / AXISRAM enable
+  症状3: Display_init Bus Fault → init/hlapp スタック 16KB
+  症状4: CAM_Init ハング → CubeMX hi2c1 と BSP I2C 競合 → hl_cam_bus_prep
+  症状5: I2C NACK → PCLK 誤検出で TIMING 過速 → 0x30C0EDFF 強制
+  症状6: VD66GY Probe 失敗 / 黒画面（LCD バックライトのみ）
+         I2C scan ACK @ 0x34 = IMX335（VD66GY は 0x20）
+         → USE_IMX335_SENSOR に切替、電源は EN(PD2)+XCLR(PC8)
+
+【期待シリアル（IMX335）】
+  hand_landmark: CAM power (IMX335 EN+XCLR) OK
+  hand_landmark: IMX335 IsReady ret=0
+  hand_landmark: IMX335 ReadID ret=0 id=0x0 (expect 0x00)
+  hand_landmark: I2C scan ... ACK @ 0x34
+  hand_landmark: IMX335 Probe ret=0
+  hand_landmark: app_run Display_init OK
+  hand_landmark: app_run CAM_Init OK
+  hand_landmark: Phase C5 app_run returned (isp thread running)
+
+【実機成功基準（M3）】
+  Bus Fault なし、LCD にカメラプレビュー（白っぽいバックライトのみは未成功）
+
+【症状7: CAM_Init / pipe start OK だが黒画面】
+  LCD は buffer[1]=黒を表示し、frame IRQ で buffer 切替。IRQ 無しだと永久黒。
+  また CMW が exposure/gain=min 固定 → AE 未動作時は真っ暗。
+  対策:
+    - Display_init 後に緑テストパターン（LCD 経路確認）
+    - pipe start 後に LTDC を capture buffer[0] へバインド
+    - 中間 exposure/gain
+    - cam_mon: frames / csi_irq / dcmipp_irq を毎秒表示
+
+【症状9: frames=0, csi_irq 大量, dcmipp_irq=0, ec=0xc8100】
+  0xc8100 = CSI SYNC + DPHY_CTRL + LP_SYNC + SOT → D-PHY ロック失敗。
+  landmarks: PLL1=800MHz → CSI=PLL1/40=20MHz
+  BSP2 FSBL: PLL1=1200MHz → 同じ /40 だと CSI=30MHz（不正）
+  対策: MX_DCMIPP_ClockConfig で PLL1 実周波数から CSI≈20MHz になる divider を計算
+
+【症状10: frames≈30fps だが色ノイズちらつき, ec=0x8010】
+  CSI は通った。0x8010 = PIPE1_OVR + DPHY_CTRL（sticky 1回）。
+  ログ: CSI clk PLL1=64000000 /3 → GetPLL1 が HSI(bypass) を返していた。
+  PLL1 bypass のままだと HCLK/XSPI が遅く PIPE overrun → 壊れた画素=色ノイズ。
+  また単一バッファ表示はティアリングでノイズに見える。
+  対策:
+    - hl_ensure_pll1(): bypass なら FSBL 同様 1200MHz に復元
+    - CSI divider はレジスタ由来 PLL1（/60 → 20MHz）
+    - frame event で ping-pong 二重バッファ復帰
+    - cam_mon: demosaic ビット / 毎秒 ErrorCode クリア
+
+【症状11: PLL1 restore 後に PSRAM OK で停止、LED 点滅なし】
+  PLL1 bypass→1200MHz 復元は成功 (SysClk=600MHz)。
+  原因1: HAL_RCC_ClockConfig → HAL_InitTick が μT-Kernel SysTick を上書き
+         → tk_dly_tsk が戻らずハング
+  原因2: 高速 HCLK 後の NOR OPI Init がハング（VIDEO_ONLY では不要）
+  対策:
+    - os_bsp: HAL_InitTick を override → カーネル動作中は SysTick を retune
+    - hl_xspi: VIDEO_ONLY で NOR skip
+
+【症状12: cam_mon 正常(~30fps, demosaic=1, ovr=0) だが LCD が砂嵐】
+  パイプは通っている。PLL1 restore 後も PSRAM を pre-boost (HCLK≈64MHz) のまま使用。
+  MX_XSPI_RAM_Init の Refresh が遅いクロック基準のまま → MMP 読み書きが壊れ砂嵐。
+  対策: hl_xspi_reclock() で DeInit + Init + MMP + R/W test（XSPI1≈200MHz をログ）
+
+【実機 OK（2026/8/11）】
+  post-boost XSPI1=200000000 / PSRAM R/W OK / LCD カメラ映像 / ~30fps err=0
+
+================================================================================

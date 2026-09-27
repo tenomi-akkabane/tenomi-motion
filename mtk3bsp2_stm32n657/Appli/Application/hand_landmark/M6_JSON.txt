@@ -1,0 +1,38 @@
+================================================================================
+Phase M6 — Landmark JSON → PC
+更新: 2026/8/11
+================================================================================
+
+【ビルド】
+  APP_JSON_ENABLE=1（landmarks/Src/app.c）
+  APP_JSON_INTERVAL_MS=100
+  printf → __io_putchar → tm_snd_dat（USART1 115200）
+  リンカ: -u _printf_float（conf/fps の浮動小数）
+
+【UART 干渉対策】
+  task 1/2 の tm_printf 停止（LED 点滅は継続）
+  cam_mon / nn# 周期ログは JSON 有効時オフ
+
+【実機確認】
+  1. Development mode + Debug → F8
+  2. Tera Term を閉じる（COM 占有回避）か、別COM確認
+  3. PowerShell:
+       cd tenomi\pc
+       python receive_landmarks.py --port COMx --debug
+  4. 期待:
+       起動 [raw] ログのあと
+       ts=... conf=... points=21
+       手なし: hand=false / not detected
+
+【成功基準】
+  □ ts=... conf=... points=21
+  □ 手なし: hand=not detected
+  → 2026/8/11 達成（COM3 / receive_landmarks.py）
+    例: conf≈0.9 pd/hl ms / fps≈3〜8 / points=21
+
+【次】
+  オンデバイス motion hub（M7）: JSON と同じ 21 点・100 ms で motion: 行を送出
+  step3_demo.py（ルールジェスチャー＋TTS）は参考。制御は motion: 行
+  LLM 解釈は別トラック
+
+================================================================================

@@ -1,0 +1,39 @@
+================================================================================
+Phase C3 — app.c 取り込み（リンク目標）
+作成: 2026/8/2
+================================================================================
+
+【実装】
+  landmarks/Src/app.c, ld.c をパス参照でビルド投入（コピーしない）
+  Application/hand_landmark/stubs/hl_app_stubs.c
+    CAM / SCRL / UTIL_LCD / BSP_PB / stai / app_postprocess / mve_resize スタブ
+  hl_rtos: portGET_RUN_TIME_COUNTER_VALUE / xPortIsInsideInterrupt 追加
+  hl_startup: app_run は呼ばず、アドレス表示で --gc-sections 対策
+
+【ビルド】
+  Debug/Application/hand_landmark/tenomi_c3.mk
+  .project リンク: Application/hand_landmark/c3/{app,ld}.c
+  定義: HAS_ROTATION_SUPPORT=0, LL_ATON_OSAL=BARE_METAL（C4 で USER_IMPL）
+  JSON: app.c 内 APP_JSON_ENABLE はそのまま（実行しないため影響なし）
+
+【期待シリアル】
+  hand_landmark: Phase C startup
+  ... XSPI OK ...
+  hand_landmark: Phase C3 app.c linked (app_run deferred)
+  hand_landmark: app_run @0x........
+  hand_landmark: stub started ...
+  task 1 / task 2
+
+【成功基準（C3）】
+  Clean Build / リンク成功、LED・task1/2 維持
+  app_run はまだ起動しない（カメラ/LCD/NPU は C4/C5）
+
+【注意】
+  CubeIDE 再生成で tenomi_c3.mk の -include と objects.list 追加が消えることあり
+  BSS 増（~7MB）は app.c の .psram_bss バッファ（XSPI MMP 前提）
+
+【次】
+  C4 FreeRTOS 除外・LL_ATON_OSAL_USER_IMPL
+  C5 nn/dp/isp 実動作 → M3〜
+
+================================================================================

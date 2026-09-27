@@ -1,0 +1,44 @@
+================================================================================
+Phase C2 — XSPI PSRAM / NOR（TENOMI）
+作成: 2026/8/2
+================================================================================
+
+【実装】
+  Application/hand_landmark/hl_xspi.c/.h
+    1. XSPI1/XSPI2 カーネルクロック = HCLK
+    2. BSP_XSPI_RAM_Init + EnableMemoryMappedMode
+    3. PSRAM @ 0x91000000 の簡易 R/W テスト
+    4. BSP_XSPI_NOR_Init (OPI+DTR) + EnableMemoryMappedMode
+
+  参照（コピーしない）:
+    landmarks/.../BSP/STM32N6570-DK/stm32n6570_discovery_xspi.c
+    landmarks/.../BSP/Components/aps256xx/
+    landmarks/.../BSP/Components/mx66uw1g45g/
+
+  ローカル conf:
+    Application/hand_landmark/bsp/*.h
+
+  起動: hand_landmark_startup() 先頭で hl_xspi_init()
+
+【期待シリアル（成功時）】
+  hand_landmark: Phase C startup
+  hand_landmark: Phase C2 XSPI init
+  hand_landmark: XSPI PSRAM OK (MMP @ 0x91000000)
+  hand_landmark: PSRAM R/W test OK
+  hand_landmark: XSPI NOR OK (MMP)
+  hand_landmark: stub started ...
+  task 1 / task 2 （継続）
+
+【注意】
+  CubeIDE が makefile / objects.list を再生成した場合、
+  tenomi_hal_extra.mk と bsp_ext/subdir.mk の -include、
+  および objects.list への追加オブジェクトが消えることがある。
+  恒久対策として .cproject に XSPI include / STM32N6570_DK_REV を追加済み。
+  .project には HAL XSPI と landmarks BSP 3 ファイルのリンク済み
+  （Application/hand_landmark/bsp_src/…）。
+  Refresh 後に makefile の -include が消えたら再追加すること。
+
+【未実施（C2 後続）】
+  NPU / GPU 初期化（landmarks main_thread 後半）
+
+================================================================================

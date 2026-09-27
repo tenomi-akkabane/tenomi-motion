@@ -1,0 +1,35 @@
+================================================================================
+Phase C4 — ATON OSAL USER_IMPL（μT-Kernel）
+作成: 2026/8/2
+================================================================================
+
+【実装】
+  TENOMI_BUILD_ATON_OSAL=1
+  LL_ATON_OSAL=LL_ATON_OSAL_USER_IMPL（C3 の BARE_METAL から変更）
+  APP_HAS_PARALLEL_NETWORKS=0
+
+  Application/aton_osal/
+    ll_aton_osal_utkernel.c  … ST テンプレート本体をコンパイル
+    ll_aton_osal_user_impl.h … WFE/ロック → aton_osal_utkernel_*
+    ll_aton_osal_utkernel.h  … μT-Kernel マクロ割当
+
+  hl_startup: aton_osal_utkernel_init() を呼び出し（スモーク）
+  FEAT_FREERTOS / ll_aton_osal_freertos は未使用
+
+【期待シリアル】
+  ... XSPI OK ...
+  hand_landmark: Phase C4 ATON OSAL init
+  hand_landmark: Phase C4 ATON OSAL OK (USER_IMPL)
+  hand_landmark: Phase C3 app.c linked (app_run deferred)
+  hand_landmark: app_run @0x........
+  stub / task 1 / task 2
+
+【成功基準】
+  Clean Build 成功、LED・task1/2 維持
+  OSAL init ログが出ること
+  app_run はまだ起動しない（C5）
+
+【次】
+  C5 nn/dp/isp 実動作 → M3〜
+
+================================================================================

@@ -1,0 +1,26 @@
+================================================================================
+Phase — 開発ログ最終掃除
+更新: 2026/8/11
+================================================================================
+
+【方針】
+  通常: UART は JSON（APP_JSON）＋致命エラーのみ
+  切り分け時: Application/hand_landmark/hl_log.h で
+    #define TENOMI_VERBOSE_LOG 1
+    にして再ビルド（Phase C/M4 の詳細ログ復活）
+
+【削除・無効化したもの】
+  Phase C/M4/M5 の進捗 tm_printf（XSPI/PLL/NPU/CAM I2C smoke 等）
+  cam_mon スレッド
+  nn# / inference FAIL 周期ログ
+  task 1/2 の UART
+  Start User-main 文言
+  TENOMI_APP_LOG / CAM_LOG（常時 no-op）
+
+【残すもの】
+  JSON（printf → USART1）
+  HL_ERR（NOR/XSPI/runtime 失敗）
+  Bus Fault ダンプ（hl_fault.c）
+  μT-Kernel 起動バナー（カーネル側）
+
+================================================================================

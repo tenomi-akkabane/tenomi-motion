@@ -1,0 +1,34 @@
+================================================================================
+Phase C1 — HAL / BSP 取り込みメモ（TENOMI）
+作成: 2026/8/2
+================================================================================
+
+【実施済み】
+  1. stm32n6xx_hal_conf.h で landmarks 相当モジュールを有効化
+       BSEC / DCMIPP / DMA2D / GFXMMU / ICACHE / LTDC / RAMCFG / RIF /
+       SPI / TIM / UART / XSPI / CACHEAXI / GPU2D
+  2. 欠けていた HAL .h/.c を landmarks STM32Cube_FW_N6 から
+       mtk3bsp2_stm32n657/Drivers/STM32N6xx_HAL_Driver/ へコピー
+  3. Debug/Drivers/.../tenomi_hal_extra.mk で追加ソースをビルド投入
+  4. Appli Clean Build（make all）成功を確認
+
+【BSP（C2 以降）】
+  参照元（コピーしない方針）:
+    tenomi/landmarks/STM32Cube_FW_N6/Drivers/BSP/STM32N6570-DK/
+    tenomi/landmarks/STM32Cube_FW_N6/Drivers/BSP/Components/
+  必要ファイル例:
+    stm32n6570_discovery.c / .h
+    stm32n6570_discovery_xspi.c / .h
+    stm32n6570_discovery_lcd.c / .h
+    stm32n6570_discovery_camera.c / .h
+    stm32n6570_discovery_bus.c / .h
+    Components: aps256xx, mx66uw1g45g（または mx25…）
+  取り込み方法（推奨）:
+    -I で landmarks BSP を追加し、必要な .c のみ Appli ビルドに列挙
+    （全コピーしない）
+
+【次（C2）】
+  usermain / hl_startup から XSPI PSRAM・NOR・（必要なら）NPU/GPU 初期化を呼ぶ
+  ※ 実機確認は Lチカ＋シリアル維持を崩さないこと
+
+================================================================================

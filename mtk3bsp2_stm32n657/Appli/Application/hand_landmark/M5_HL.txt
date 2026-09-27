@@ -1,0 +1,42 @@
+================================================================================
+Phase M5 — Hand Landmark (21点)
+更新: 2026/8/11
+================================================================================
+
+【ビルド】
+  TENOMI_C5_VIDEO_ONLY=0
+  TENOMI_M4_PD_ONLY=0          … PD + HL フルパス
+  TENOMI_M4_REAL_NN=1
+  追加リンク: stai_hand_landmark.c / hand_landmark.c / mve_resize.c
+
+【実機前必須: NOR 重み】
+  1) palm_detector_data.hex  @ 0x70380000  （M4 で書込済みならそのまま）
+  2) hand_landmark_data.hex  @ 0x70580000  （ELAR :020000047058）
+  方法: STM32CubeProgrammer + DK External Loader (MX66UW1G45G)
+  ※ HL 未書込みだと palm 枠は出ても 21点が不正／落ちる
+
+【フラッシュ後の期待ログ】
+  IC6=PLL2/1 / IC11=PLL3/1
+  palm weights @0x70380000 = <非 FFFFFFFF>
+  HL weights @0x70580000 = <非 FFFFFFFF>
+  hand_landmark_init OK (M5)
+  CAM_NNPipe_Start OK
+  PD / HL inference done ... npu_sig 増加
+  nn#N track=1 (M5 HL path)
+  LCD: 緑/赤枠 + 21点骨格（黄など）
+
+【成功基準】
+  LCD カメラ + パーム枠 + 21点ランドマーク / LED 点滅
+  → 2026/8/11 達成（NOR OK / HL weights / track+21点）
+
+【残課題（品質）】
+  - 追従ラグ: 毎フレーム UART ログ + Debug -O0 + PIPE2 drop 多め
+    → 2026/8/11: PD/HL 毎推論ログ削除、cam_mon 5s、nn# 60f ごと
+  - 見た目: HAS_ROTATION_SUPPORT=0 → CPU の UTIL_LCD 線画
+    （FreeRTOS 標準は NemaGFX 回転描画＝1）
+
+【メモ】
+  起動ログは残置。残り開発ログの一括削除は後続可
+  M4 の PD_ONLY バイナリに戻す場合は TENOMI_M4_PD_ONLY=1
+
+================================================================================

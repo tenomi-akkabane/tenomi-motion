@@ -1,0 +1,10 @@
+################################################################################
+# TENOMI — included from Debug/makefile and Release/makefile via
+# -include ../makefile.defs. Survives CubeIDE regenerating those makefiles.
+# Fragments live under <config>/Application/hand_landmark/ (cwd = Debug or Release).
+################################################################################
+
+-include Application/hand_landmark/tenomi_build_opts.mk
+-include Application/hand_landmark/tenomi_c4.mk
+-include Application/hand_landmark/tenomi_c5.mk
+-include Application/hand_landmark/tenomi_nema.mk

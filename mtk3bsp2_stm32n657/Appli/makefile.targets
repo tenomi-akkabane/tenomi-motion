@@ -1,0 +1,8 @@
+# TENOMI: CubeIDE regenerates Debug/makefile with @"objects.list", which omits
+# HAL extras appended to $(OBJS) via tenomi_hal_extra.mk. Override the link step
+# after CubeIDE's recipe (this file is included last via makefile.targets).
+# Linker script is relative to Appli/ (this file lives in Appli/).
+mtk3bsp2_stm32n657_Appli.elf mtk3bsp2_stm32n657_Appli.map: $(OBJS) $(USER_OBJS) ../STM32N657X0HXQ_LRUN_PSRAM.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "mtk3bsp2_stm32n657_Appli.elf" $(OBJS) $(USER_OBJS) $(LIBS) -mcpu=cortex-m55 -T"../STM32N657X0HXQ_LRUN_PSRAM.ld" --specs=nosys.specs -Wl,-Map="mtk3bsp2_stm32n657_Appli.map" -Wl,--gc-sections -static -Wl,--cmse-implib -Wl,--out-implib=./secure_nsclib.o -u _printf_float --specs=nano.specs -mfpu=fpv5-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+	@echo 'Finished building target: $@'
+	@echo ' '

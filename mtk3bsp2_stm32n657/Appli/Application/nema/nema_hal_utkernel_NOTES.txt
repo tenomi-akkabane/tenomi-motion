@@ -1,0 +1,25 @@
+TENOMI Phase B — NemaGFX HAL (μT-Kernel) notes
+==============================================
+
+Source to port later:
+  landmarks/Src/nema_hal_freertos.c
+
+FreeRTOS usage to replace
+-------------------------
+  xSemaphoreCreateCountingStatic / Take / GiveFromISR  … GPU2D IRQ 完了待ち
+  xSemaphoreCreateMutexStatic / Take / Give            … NEMA_MULTI_THREAD 時
+
+μT-Kernel mapping (planned)
+---------------------------
+  Counting/binary sem  → tk_cre_sem / tk_wai_sem / tk_sig_sem
+  Mutex                → tk_cre_mtx / tk_loc_mtx / tk_unl_mtx
+  FromISR Give         → tk_sig_sem（タスク独立部から可）
+
+Status
+------
+  Phase B: 方針のみ（NemaGFX / GPU2D ライブラリ未統合のため .c 未作成）
+  Phase C/D: landmarks の Nema ソースを複製し、上記 API に置換
+
+CNF note
+--------
+  現状 CNF_MAX_MTXID=4。Nema で mutex を複数使う場合は config.h で増やす。

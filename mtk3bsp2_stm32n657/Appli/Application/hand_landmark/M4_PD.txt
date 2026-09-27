@@ -1,0 +1,46 @@
+================================================================================
+Phase M4 — パーム検出（実モデル）
+更新: 2026/8/11
+================================================================================
+
+【ビルド】
+  TENOMI_C5_VIDEO_ONLY=0
+  TENOMI_M4_PD_ONLY=1          … HL スキップ、PD のみ
+  TENOMI_M4_REAL_NN=1          … 実 stai_palm + ll_aton + NetworkRuntime + PP
+  NOR MMP 有効（pre-boost）/ CACHEAXI 有効 / IpPlug CLIENT2+5 split / NN PIPE2
+
+【実機前必須: NOR 重み書込み】
+  ファイル: landmarks/Model/palm_detector_data.hex
+  アドレス: 0x70380000（ELAR 先頭 :020000047038）
+  方法: STM32CubeProgrammer + DK External Loader (MX66UW1G45G)
+  ※未書込みだと推論失敗（プレビューは動く可能性あり）
+
+【フラッシュ後の期待ログ】
+  XSPI PSRAM OK (post-boost) ... XSPI1=200000000
+  XSPI NOR OK (MMP)            ← skip ではない
+  Phase M4 NPU OK (CACHEAXI)
+  IpPlug CLIENT2+CLIENT5 split (NN+preview)
+  NN pipe (PIPE2) configured
+  app_run ... nn / dp スレッド起動
+  cam_mon ~30fps、可能なら緑のパーム枠
+
+【失敗時の切り分け】
+  NOR hang → LED 停止: 前回と同様 pre-boost を確認
+  CACHEAXI timeout → WARN ログ、プレビューのみ残るか確認
+  PIPE1_OVR / 砂嵐 → IpPlug 帯域を CLIENT5 寄りに戻す調整
+  枠なし・推論エラー → NOR 重み未書込みを最優先確認
+
+【実機 OK — M4 達成（2026/8/11）】
+  LCD カメラ映像 + 緑/赤枠 + 色付きキーポイント / LED 点滅
+  nn#31 hands=1 pd≈100ms prob≈93%
+  cam_mon ~30fps, p2fr≈30/s, npu_sig 増加, PIPE2 drop は NN が遅いため正常
+  修正の決め手: IC6=PLL2/1 (NPU) + IC11=PLL3/1 + ISR 安全 bqueue + NOR post-boost
+
+  色付き点 = パーム検出キーポイント（21点 HL は M5）
+  PD 毎フレーム詳細ログは切り分け用（本番前に間引き可）
+
+【成功基準】
+  LCD カメラ映像 + パーム枠（緑） / LED 点滅  ← 達成
+  21点ランドマークは M5
+
+================================================================================

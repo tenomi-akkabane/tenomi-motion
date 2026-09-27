@@ -1,0 +1,47 @@
+================================================================================
+Phase C — landmarks 統合方針（TENOMI）
+作成: 2026/8/2
+================================================================================
+
+【方針】
+  1. landmarks 全コピーはしない。参照元は tenomi/landmarks のまま。
+  2. Appli 側は Application/hand_landmark/ に「移植層＋段階的に取り込むソース」を置く。
+  3. FreeRTOS API は hl_rtos（互換レイヤ）経由で μT-Kernel にマップする。
+     → app.c の大規模書き換えを抑え、OSAL は既存 ll_aton_osal_utkernel を使う。
+  4. Lチカ（task_1/2）は当面維持。hand_landmark は別起動パスで段階追加。
+  5. JSON（APP_JSON）はフェーズ C では触れない（計画どおり後回し）。
+
+【ディレクトリ】
+  Application/hand_landmark/
+    C_INTEGRATION.txt          … 本ファイル
+    hl_startup.h / .c          … usermain から呼ぶ入口（現状はスタブ）
+    rtos/hl_rtos.h / .c        … FreeRTOS 静的 API → μT-Kernel
+    rtos/FreeRTOS.h            … 互換インクルード（将来 app.c 用）
+    rtos/task.h
+    rtos/semphr.h
+
+【取り込み段階】
+  C0  方針・RTOS レイヤ・起動スタブ          ← 完了（実機 OK）
+  C1  HAL 有効化（XSPI/DCMIPP/LTDC 等）+ BSP 方針  ← 完了
+  C2  XSPI PSRAM/NOR 初期化（hl_xspi）       ← 完了（実機 OK）
+  C3  app.c を互換レイヤ付きでビルド投入      ← 完了（実機 OK）
+  C4  FreeRTOS ソース除外・LL_ATON_OSAL_USER_IMPL 有効 ← 完了（実機 OK）
+  C5  M3 VIDEO_ONLY（CAM/LCD/isp、NN なし）          ← ビルド完了・実機待ち
+  次  実機プレビュー確認 → M4/M5（nn/dp）
+
+【プリプロセッサ（landmarks 実績・C2 以降で本格適用）】
+  STM32N6570_DK_REV
+  LL_ATON_PLATFORM=LL_ATON_PLAT_STM32N6
+  LL_ATON_OSAL=LL_ATON_OSAL_USER_IMPL
+  LL_ATON_RT_MODE=LL_ATON_RT_ASYNC
+  APP_HAS_PARALLEL_NETWORKS=0
+  TENOMI_BUILD_ATON_OSAL=1
+  （FEAT_FREERTOS は付けない）
+
+【成功基準】
+  C0: Clean Build 成功、LED 点滅維持、シリアルに hand_landmark stub メッセージ
+  C1: HAL モジュール有効＋追加 HAL リンク済みビルド成功（実機 HW 初期化は C2）
+
+  詳細: C1_HAL_BSP.txt
+
+================================================================================
