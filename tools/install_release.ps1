@@ -2,7 +2,7 @@
 #
 # Signs the Release Appli .bin and writes FSBL + Appli + palm + HL + MotionMLP
 # in one CubeProgrammer step. MotionMLP stays a separate NOR slot so a later
-# retrain (28_motion_train_dk) can replace only that hex — no Appli rebuild.
+# retrain (gesture retraining kit, motion_train_dk) can replace only that hex — no Appli rebuild.
 #
 #   ./tools/install_release.sh
 #   ./tools/install_release.sh --no-flash
@@ -87,7 +87,7 @@ if (-not $MotionHex) {
 # --- Motion-only replace: no Appli sign, palm/HL untouched ---
 if ($MotionOnly) {
     if (-not (Test-Path $MotionHex)) {
-        throw "Missing MotionMLP hex: $MotionHex`nExport from 28_motion_train_dk (export_motion_mlp_nor.py) first."
+        throw "Missing MotionMLP hex: $MotionHex`nExport it with the gesture retraining kit (motion_train_dk: scripts/export_motion_mlp_nor.py) first."
     }
     Write-Host "MotionMLP replace-only @ 0x70A00000"
     Write-Host "  $MotionHex"

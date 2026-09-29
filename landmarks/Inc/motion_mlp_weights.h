@@ -2,7 +2,7 @@
  * MotionMLP weight blob contract (NOR-resident).
  *
  * Flash: landmarks/Model/motion_mlp_data.hex @ MOTION_MLP_NOR_ADDR
- * Replaceable independently (28_motion_train_dk). Appli / palm / HL stay.
+ * Replaceable independently (gesture retraining kit, motion_train_dk). Appli / palm / HL stay.
  */
 
 #ifndef MOTION_MLP_WEIGHTS_H

@@ -4,7 +4,7 @@
 Primary:
   python export_motion_mlp_nor.py --pt path/to/motion_mlp.pt
 
-Checkpoint format matches 15_gesture-motion-dk/scripts/train_motion_mlp.py:
+Checkpoint format matches the gesture retraining kit (motion_train_dk/scripts/train_motion_mlp.py):
   model_state_dict, input_dim, hidden_sizes, num_classes, window_frames, class_names
 
 Writes motion_mlp_data.bin and motion_mlp_data.hex next to this script.
@@ -128,8 +128,8 @@ def load_from_pt(path: Path) -> tuple[list[float], list[str]]:
         import torch
     except ImportError as exc:
         raise SystemExit(
-            "torch is required for --pt. Use the motion_train venv, e.g.\n"
-            "  <15_gesture-motion-dk>/.venv/Scripts/python.exe "
+            "torch is required for --pt. Use the gesture retraining kit venv, e.g.\n"
+            "  <motion_train_dk>/.venv/Scripts/python.exe "
             "landmarks/Model/export_motion_mlp_nor.py --pt <model.pt>"
         ) from exc
 
